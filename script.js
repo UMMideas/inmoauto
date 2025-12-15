@@ -204,3 +204,26 @@ document.addEventListener('click', e => {
       window.__proVariantes[tipo];
   }
 });
+
+const btnCopy = document.getElementById('btn-copy-text');
+
+btnCopy?.addEventListener('click', () => {
+  let texto = '';
+
+  if (window.__proVariantes) {
+    texto += 'DESCRIPCIÓN\n\n';
+    texto += window.__proVariantes.clasica + '\n\n';
+  }
+
+  texto += 'COPY WHATSAPP\n' +
+    document.getElementById('copy-whatsapp').textContent + '\n\n';
+
+  texto += 'COPY INSTAGRAM\n' +
+    document.getElementById('copy-instagram').textContent + '\n\n';
+
+  texto += 'COPY PORTAL\n' +
+    document.getElementById('copy-portal').textContent;
+
+  navigator.clipboard.writeText(texto);
+  alert('Texto copiado al portapapeles');
+});
