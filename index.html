@@ -1,23 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>INMOAUTO</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>INMOAUTO | Automatización Inmobiliaria</title>
+  <meta name="description" content="Automatizá descripciones, fichas y publicaciones inmobiliarias con IA en segundos.">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-<h1>INMOAUTO</h1>
+<header class="hero">
+  <nav class="nav">
+    <img src="assets/logo.svg" class="logo" alt="INMOAUTO">
+    <a href="#demo" class="btn">Ver demo</a>
+  </nav>
 
-<form id="propertyForm">
-  <input name="titulo" placeholder="Título" required>
-  <input name="barrio" placeholder="Barrio" required>
-  <input name="precio" placeholder="Precio" required>
-  <button type="submit">Generar descripción</button>
-</form>
+  <div class="hero-content">
+    <h1>Tu inmobiliaria trabajando sola</h1>
+    <p>Generá descripciones, fichas PDF y publicaciones listas para portales en segundos.</p>
+    <a href="#demo" class="btn primary">Probar gratis</a>
+  </div>
+</header>
 
-<pre id="result"></pre>
+<section class="features">
+  <div class="feature">
+    <h3>✍️ Redacción automática</h3>
+    <p>Textos profesionales optimizados para venta inmobiliaria.</p>
+  </div>
+  <div class="feature">
+    <h3>📄 Fichas PDF</h3>
+    <p>Documentos listos para enviar a clientes.</p>
+  </div>
+  <div class="feature">
+    <h3>🤖 IA 24/7</h3>
+    <p>Sin esfuerzo, sin redactores, sin demoras.</p>
+  </div>
+</section>
+
+<section id="demo" class="demo">
+  <h2>Probalo ahora</h2>
+
+  <form id="propertyForm">
+    <input name="titulo" placeholder="Título de la propiedad" required>
+    <input name="barrio" placeholder="Barrio" required>
+    <input name="precio" placeholder="Precio" required>
+    <button type="submit">Generar descripción</button>
+  </form>
+
+  <pre id="result"></pre>
+</section>
+
+<footer>
+  <p>© 2025 INMOAUTO · Automatización inmobiliaria</p>
+</footer>
 
 <script src="script.js"></script>
 </body>
 </html>
+
+
