@@ -37,18 +37,89 @@
   </div>
 </section>
 
-<section id="demo" class="demo">
-  <h2>Probalo ahora</h2>
+<section class="wizard">
+  <aside class="wizard-steps">
+    <ul>
+      <li class="active">Operación</li>
+      <li>Propiedad</li>
+      <li>Datos</li>
+      <li>Ubicación</li>
+      <li>Objetivo</li>
+      <li>Contacto</li>
+    </ul>
+  </aside>
 
-  <form id="propertyForm">
-    <input name="titulo" placeholder="Título de la propiedad" required>
-    <input name="barrio" placeholder="Barrio" required>
-    <input name="precio" placeholder="Precio" required>
-    <button type="submit">Generar descripción</button>
+  <form id="wizardForm" class="wizard-form">
+
+    <!-- PASO 1 -->
+    <div class="step active">
+      <h2>Tipo de operación</h2>
+      <select name="operacion" required>
+        <option value="">Seleccionar</option>
+        <option>Venta</option>
+        <option>Alquiler</option>
+      </select>
+      <button type="button" class="next">Continuar</button>
+    </div>
+
+    <!-- PASO 2 -->
+    <div class="step">
+      <h2>Tipo de propiedad</h2>
+      <select name="propiedad" required>
+        <option value="">Seleccionar</option>
+        <option>Departamento</option>
+        <option>Casa</option>
+        <option>PH</option>
+        <option>Lote</option>
+        <option>Local</option>
+      </select>
+      <button type="button" class="prev">Volver</button>
+      <button type="button" class="next">Continuar</button>
+    </div>
+
+    <!-- PASO 3 -->
+    <div class="step">
+      <h2>Datos principales</h2>
+      <input name="ambientes" placeholder="Ambientes">
+      <input name="metros" placeholder="Metros cuadrados">
+      <input name="precio" placeholder="Precio">
+      <button type="button" class="prev">Volver</button>
+      <button type="button" class="next">Continuar</button>
+    </div>
+
+    <!-- PASO 4 -->
+    <div class="step">
+      <h2>Ubicación</h2>
+      <input name="barrio" placeholder="Barrio">
+      <input name="ciudad" placeholder="Ciudad">
+      <button type="button" class="prev">Volver</button>
+      <button type="button" class="next">Continuar</button>
+    </div>
+
+    <!-- PASO 5 -->
+    <div class="step">
+      <h2>Objetivo del aviso</h2>
+      <select name="objetivo">
+        <option>Venta rápida</option>
+        <option>Perfil premium</option>
+        <option>Inversión</option>
+      </select>
+      <button type="button" class="prev">Volver</button>
+      <button type="button" class="next">Continuar</button>
+    </div>
+
+    <!-- PASO 6 -->
+    <div class="step">
+      <h2>Contacto</h2>
+      <input name="email" type="email" placeholder="Email" required>
+      <button type="button" class="prev">Volver</button>
+      <button type="submit" class="submit">Generar descripción</button>
+    </div>
+
   </form>
-
-  <pre id="result"></pre>
 </section>
+
+<pre id="result"></pre>
 
 <footer>
   <p>© 2025 INMOAUTO · Automatización inmobiliaria</p>
@@ -57,5 +128,6 @@
 <script src="script.js"></script>
 </body>
 </html>
+
 
 
