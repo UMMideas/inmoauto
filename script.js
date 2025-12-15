@@ -95,5 +95,39 @@ proModal?.addEventListener('click', e => {
   }
 });
 
+const proBtn = document.getElementById('btn-pro');
+const proModal = document.getElementById('pro-modal');
+const closePro = document.getElementById('close-pro');
+const proForm = document.getElementById('pro-lead-form');
+const proSuccess = document.getElementById('pro-success');
+
+if (proBtn) {
+  proBtn.addEventListener('click', () => {
+    proModal.style.display = 'flex';
+  });
+}
+
+closePro?.addEventListener('click', () => {
+  proModal.style.display = 'none';
+});
+
+proModal?.addEventListener('click', e => {
+  if (e.target === proModal) {
+    proModal.style.display = 'none';
+  }
+});
+
+proForm?.addEventListener('submit', async e => {
+  e.preventDefault();
+
+  const email = new FormData(proForm).get('email');
+
+  // DEMO: guardado local / console (por ahora)
+  console.log('Nuevo lead PRO:', email);
+
+  proForm.style.display = 'none';
+  proSuccess.style.display = 'block';
+});
+
 
 
