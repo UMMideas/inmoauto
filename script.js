@@ -22,7 +22,11 @@ document.getElementById('wizardForm').addEventListener('submit', async e => {
   e.preventDefault();
 
   const result = document.getElementById('result');
+  const proCTA = document.getElementById('pro-cta');
+
+  // Reset UI
   result.textContent = "Generando descripción con IA...";
+  if (proCTA) proCTA.style.display = "none";
 
   try {
     const data = Object.fromEntries(new FormData(e.target));
@@ -39,7 +43,13 @@ document.getElementById('wizardForm').addEventListener('submit', async e => {
 
     const json = await res.json();
 
-    result.textContent = json.descripcion;
+    // Mostrar descripción
+    result.textContent = json.descripcion || "No se pudo generar la descripción.";
+
+    // Mostrar CTA PRO solo en modo demo
+    if (json.demo === true && proCTA) {
+      proCTA.style.display = "block";
+    }
 
   } catch (err) {
     console.error(err);
@@ -47,4 +57,21 @@ document.getElementById('wizardForm').addEventListener('submit', async e => {
       "Ocurrió un error al generar la descripción. Intentá nuevamente.";
   }
 });
+
+// Acción del botón PRO (placeholder)
+const btnPro = document.getElementById('btn-pro');
+if (btnPro) {
+  btnPro.addEventListener('click', () => {
+    alert(
+      "Versión PRO próximamente:\n\n" +
+      "• Descripciones completas\n" +
+      "• Variantes por estilo\n" +
+      "• Copy listo para publicar\n" +
+      "• Exportar PDF / texto\n\n" +
+      "🚀 Muy pronto disponible"
+    );
+  });
+}
+
+
 
