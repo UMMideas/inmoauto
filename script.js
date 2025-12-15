@@ -10,7 +10,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateSteps() {
     steps.forEach((s, i) => s.classList.toggle('active', i === current));
-    stepIndicators.forEach((l, i) => l.classList.toggle('active', i === current));
+    stepIndicators.forEach((l, i) =>
+      l.classList.toggle('active', i === current)
+    );
   }
 
   document.addEventListener('click', e => {
@@ -40,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
   form?.addEventListener('submit', async e => {
     e.preventDefault();
 
-    result.textContent = "Generando descripción con IA...";
-    proCTA.style.display = "none";
+    result.textContent = 'Generando descripción con IA...';
+    if (proCTA) proCTA.style.display = 'none';
 
     try {
       const data = Object.fromEntries(new FormData(form));
@@ -55,20 +57,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const json = await res.json();
 
       result.textContent =
-        json.descripcion || "No se pudo generar la descripción.";
+        json.descripcion || 'No se pudo generar la descripción.';
 
-      if (json.demo === true) {
-        proCTA.style.display = "block";
+      if (json.demo === true && proCTA) {
+        proCTA.style.display = 'block';
       }
 
     } catch (err) {
       console.error(err);
-      result.textContent = "Error al generar la descripción.";
+      result.textContent = 'Error al generar la descripción.';
     }
   });
 
   /* ======================
      MODAL PRO (EMAIL)
+     ⚠️ NO se abre automáticamente
   ====================== */
 
   const proModal = document.getElementById('pro-modal');
@@ -96,6 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
     proSuccess.style.display = 'block';
   });
 
+  /*
+  ==================================================
+  🚫 LISTENER DESACTIVADO (INTENCIONALMENTE)
+  --------------------------------------------------
+  Este listener abría el modal al hacer click en
+  "Obtener versión PRO". Hoy NO debe ejecutarse
+  porque el botón genera variantes PRO reales.
+
+  Se deja comentado para futura lógica de "locked".
+  ==================================================
+
+  const proBtn = document.getElementById('btn-pro');
+  proBtn?.addEventListener('click', () => {
+    proModal.style.display = 'flex';
+  });
+
+  */
 });
 
 /* ======================
@@ -134,11 +154,14 @@ if (btnPro) {
 
       const json = await generarVersionPro(data);
 
+      // Mostrar bloque PRO
       proResult.style.display = 'block';
 
+      // Texto principal
       document.getElementById('pro-text').textContent =
         json.variantes.clasica;
 
+      // Copys listos para usar
       document.getElementById('copy-whatsapp').textContent =
         json.copy.whatsapp;
 
@@ -148,10 +171,12 @@ if (btnPro) {
       document.getElementById('copy-portal').textContent =
         json.copy.portal;
 
+      // Guardar variantes para tabs
       window.__proVariantes = json.variantes;
 
     } catch (err) {
       console.error(err);
+      alert('No se pudo generar la versión PRO');
     } finally {
       btnPro.textContent = 'Obtener versión PRO';
       btnPro.disabled = false;
