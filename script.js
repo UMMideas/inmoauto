@@ -291,3 +291,48 @@ ${document.getElementById('copy-portal').textContent}
     alert('No se pudo copiar el texto');
   }
 });
+
+/* ======================
+   EXPORTAR PDF
+====================== */
+
+const btnExportPDF = document.getElementById('btn-export-pdf');
+
+btnExportPDF?.addEventListener('click', async () => {
+  try {
+    btnExportPDF.textContent = 'Generando PDF...';
+    btnExportPDF.disabled = true;
+
+    const payload = {
+      descripcion: document.getElementById('pro-text').textContent,
+      copy: {
+        whatsapp: document.getElementById('copy-whatsapp').textContent,
+        instagram: document.getElementById('copy-instagram').textContent,
+        portal: document.getElementById('copy-portal').textContent
+      }
+    };
+
+    const res = await fetch('/api/exportar-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'descripcion-inmobiliaria.pdf';
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo generar el PDF');
+  } finally {
+    btnExportPDF.textContent = '📄 Exportar PDF';
+    btnExportPDF.disabled = false;
+  }
+});
