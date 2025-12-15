@@ -64,10 +64,10 @@ Reglas:
       data.output?.[0]?.content?.[0]?.text ||
       "No se pudo generar la descripción.";
 
-    res.status(200).json({ ok: true, descripcion });
+    return res.status(200).json({ ok: true, descripcion });
 
   } catch (error) {
     console.error("SERVER ERROR:", error);
-    res.status(500).json({ ok: false });
+    return res.status(500).json({ ok: false });
   }
 }
