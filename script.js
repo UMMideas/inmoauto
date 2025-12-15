@@ -115,3 +115,20 @@ async function generarVersionPro(data) {
 
   return res.json();
 }
+
+document.addEventListener('click', e => {
+  if (!e.target.classList.contains('tab')) return;
+
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.remove('active')
+  );
+
+  e.target.classList.add('active');
+
+  const tipo = e.target.dataset.tab;
+
+  if (window.__proVariantes && window.__proVariantes[tipo]) {
+    document.getElementById('pro-text').textContent =
+      window.__proVariantes[tipo];
+  }
+});
