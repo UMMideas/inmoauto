@@ -1,9 +1,3 @@
-import OpenAI from "openai";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).end();
@@ -38,22 +32,35 @@ Datos de la propiedad:
 Reglas:
 - Español neutro argentino
 - Estilo profesional inmobiliario
-- No usar emojis
 - No exagerar
 - 2 a 3 párrafos
-- Cerrar con una frase comercial sutil
-`;
+- Cierre comercial sutil
+`.trim();
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: "Sos un experto en redacción inmobiliaria." },
-        { role: "user", content: prompt }
-      ],
-      temperature: 0.7
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "Sos un experto en redacción inmobiliaria." },
+          { role: "user", content: prompt }
+        ],
+        temperature: 0.7
+      })
     });
 
-    const descripcion = completion.choices[0].message.content;
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("OPENAI ERROR:", errorText);
+      throw new Error("Error en OpenAI");
+    }
+
+    const data = await response.json();
+    const descripcion = data.choices[0].message.content;
 
     res.status(200).json({
       ok: true,
@@ -61,11 +68,10 @@ Reglas:
     });
 
   } catch (error) {
-  console.error("ERROR OPENAI:", error);
-  res.status(500).json({
-    ok: false,
-    error: error.message || "Error generando la descripción"
-  });
+    console.error("SERVER ERROR:", error);
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    });
+  }
 }
-}
-
