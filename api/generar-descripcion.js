@@ -61,10 +61,11 @@ Reglas:
     });
 
   } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      ok: false,
-      error: "Error generando la descripción"
-    });
-  }
+  console.error("ERROR OPENAI:", error);
+  res.status(500).json({
+    ok: false,
+    error: error.message || "Error generando la descripción"
+  });
 }
+}
+
