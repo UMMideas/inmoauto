@@ -21,15 +21,30 @@ document.addEventListener('click', e => {
 document.getElementById('wizardForm').addEventListener('submit', async e => {
   e.preventDefault();
 
-  const data = Object.fromEntries(new FormData(e.target));
+  const result = document.getElementById('result');
+  result.textContent = "Generando descripción con IA...";
 
-  const res = await fetch('/api/generar-descripcion', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
-  });
+  try {
+    const data = Object.fromEntries(new FormData(e.target));
 
-  const json = await res.json();
-  document.getElementById('result').textContent =
-    JSON.stringify(json, null, 2);
+    const res = await fetch('/api/generar-descripcion', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (!res.ok) {
+      throw new Error('Error en la respuesta del servidor');
+    }
+
+    const json = await res.json();
+
+    result.textContent = json.descripcion;
+
+  } catch (err) {
+    console.error(err);
+    result.textContent =
+      "Ocurrió un error al generar la descripción. Intentá nuevamente.";
+  }
 });
+
