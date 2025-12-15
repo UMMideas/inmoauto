@@ -1,8 +1,18 @@
 {
   "name": "inmoauto",
-  "private": true
-}
-
-"dependencies": {
-  "node-fetch": "^3.3.2"
+  "version": "1.0.0",
+  "description": "Plataforma automática de servicios inmobiliarios con IA",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo \"No build step required\"",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }
