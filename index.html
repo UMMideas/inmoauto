@@ -20,11 +20,52 @@
       <li>✔ Exportar PDF / texto</li>
     </ul>
 
-    <p class="soon">Muy pronto disponible</p>
+    <p class="soon">
+      Dejanos tu email y te avisamos cuando esté disponible.
+    </p>
 
-    <button id="close-pro">Cerrar</button>
+    <form id="pro-lead-form">
+      <input
+        type="email"
+        name="email"
+        placeholder="Tu email profesional"
+        required
+        style="
+          width:100%;
+          padding:10px;
+          margin-top:12px;
+          border:1px solid #ccc;
+          border-radius:6px;
+        "
+      />
+
+      <button type="submit" style="
+        margin-top:14px;
+        width:100%;
+        padding:12px;
+        background:#000;
+        color:#fff;
+        border:none;
+        border-radius:6px;
+        cursor:pointer;
+      ">
+        Avisarme cuando esté disponible
+      </button>
+    </form>
+
+    <p id="pro-success" style="
+      display:none;
+      margin-top:14px;
+      font-size:14px;
+      color:green;
+    ">
+      ✔️ ¡Gracias! Te avisaremos apenas esté disponible.
+    </p>
+
+    <button id="close-pro" class="close-btn">Cerrar</button>
   </div>
 </div>
+
  
 <body>
 
@@ -166,6 +207,7 @@
 <script src="script.js"></script>
 </body>
 </html>
+
 
 
 
