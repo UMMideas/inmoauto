@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const json = await res.json();
 
-      result.textContent = json.descripcion || "No se pudo generar la descripción.";
+      result.textContent =
+        json.descripcion || "No se pudo generar la descripción.";
 
       if (json.demo === true) {
         proCTA.style.display = "block";
@@ -67,18 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ======================
-     MODAL PRO
+     MODAL PRO (EMAIL)
   ====================== */
 
-  const proBtn = document.getElementById('btn-pro');
   const proModal = document.getElementById('pro-modal');
   const closePro = document.getElementById('close-pro');
   const proForm = document.getElementById('pro-lead-form');
   const proSuccess = document.getElementById('pro-success');
-
-  proBtn?.addEventListener('click', () => {
-    proModal.style.display = 'flex';
-  });
 
   closePro?.addEventListener('click', () => {
     proModal.style.display = 'none';
@@ -102,6 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
+/* ======================
+   ENDPOINT PRO
+====================== */
+
 async function generarVersionPro(data) {
   const res = await fetch('/api/generar-descripcion-pro', {
     method: 'POST',
@@ -116,6 +116,53 @@ async function generarVersionPro(data) {
   return res.json();
 }
 
+/* ======================
+   BOTÓN PRO → GENERAR
+====================== */
+
+const btnPro = document.getElementById('btn-pro');
+const proResult = document.getElementById('pro-result');
+
+if (btnPro) {
+  btnPro.addEventListener('click', async () => {
+    try {
+      btnPro.textContent = 'Generando versión PRO...';
+      btnPro.disabled = true;
+
+      const form = document.getElementById('wizardForm');
+      const data = Object.fromEntries(new FormData(form));
+
+      const json = await generarVersionPro(data);
+
+      proResult.style.display = 'block';
+
+      document.getElementById('pro-text').textContent =
+        json.variantes.clasica;
+
+      document.getElementById('copy-whatsapp').textContent =
+        json.copy.whatsapp;
+
+      document.getElementById('copy-instagram').textContent =
+        json.copy.instagram;
+
+      document.getElementById('copy-portal').textContent =
+        json.copy.portal;
+
+      window.__proVariantes = json.variantes;
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      btnPro.textContent = 'Obtener versión PRO';
+      btnPro.disabled = false;
+    }
+  });
+}
+
+/* ======================
+   TABS PRO
+====================== */
+
 document.addEventListener('click', e => {
   if (!e.target.classList.contains('tab')) return;
 
@@ -127,7 +174,7 @@ document.addEventListener('click', e => {
 
   const tipo = e.target.dataset.tab;
 
-  if (window.__proVariantes && window.__proVariantes[tipo]) {
+  if (window.__proVariantes?.[tipo]) {
     document.getElementById('pro-text').textContent =
       window.__proVariantes[tipo];
   }
