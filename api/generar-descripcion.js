@@ -20,24 +20,24 @@ Sos un redactor profesional inmobiliario en Argentina.
 Redactá una descripción clara, atractiva y orientada a conversión.
 
 Datos de la propiedad:
-- Operación: ${operacion}
-- Tipo: ${propiedad}
-- Ambientes: ${ambientes}
-- Metros cuadrados: ${metros}
-- Precio: ${precio}
-- Barrio: ${barrio}
-- Ciudad: ${ciudad}
-- Objetivo del aviso: ${objetivo}
+Operación: ${operacion}
+Tipo: ${propiedad}
+Ambientes: ${ambientes}
+Metros: ${metros}
+Precio: ${precio}
+Barrio: ${barrio}
+Ciudad: ${ciudad}
+Objetivo del aviso: ${objetivo}
 
 Reglas:
-- Español neutro argentino
+- Español argentino
 - Estilo profesional inmobiliario
-- No exagerar
 - 2 a 3 párrafos
+- Sin emojis
 - Cierre comercial sutil
 `.trim();
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,22 +45,21 @@ Reglas:
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "Sos un experto en redacción inmobiliaria." },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.7
+        input: prompt
       })
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OPENAI ERROR:", errorText);
+      const err = await response.text();
+      console.error("OPENAI ERROR:", err);
       throw new Error("Error en OpenAI");
     }
 
     const data = await response.json();
-    const descripcion = data.choices[0].message.content;
+    const descripcion =
+      data.output_text ||
+      data.output?.[0]?.content?.[0]?.text ||
+      "No se pudo generar el texto";
 
     res.status(200).json({
       ok: true,
