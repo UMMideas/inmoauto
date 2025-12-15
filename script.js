@@ -227,3 +227,28 @@ btnCopy?.addEventListener('click', () => {
   navigator.clipboard.writeText(texto);
   alert('Texto copiado al portapapeles');
 });
+
+const btnPDF = document.getElementById('btn-export-pdf');
+
+btnPDF?.addEventListener('click', async () => {
+  const res = await fetch('/api/exportar-pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      variantes: window.__proVariantes,
+      copy: {
+        whatsapp: document.getElementById('copy-whatsapp').textContent,
+        instagram: document.getElementById('copy-instagram').textContent,
+        portal: document.getElementById('copy-portal').textContent
+      }
+    })
+  });
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'descripcion-pro.pdf';
+  a.click();
+});
