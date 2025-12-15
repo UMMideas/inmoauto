@@ -1,12 +1,10 @@
-import fetch from "node-fetch";
-
 export const config = {
   runtime: "nodejs"
 };
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).end();
+    return res.status(405).json({ ok: false });
   }
 
   try {
@@ -34,6 +32,12 @@ Precio: ${precio}
 Barrio: ${barrio}
 Ciudad: ${ciudad}
 Objetivo: ${objetivo}
+
+Reglas:
+- Español argentino
+- Estilo profesional
+- 2 a 3 párrafos
+- Cierre comercial sutil
 `.trim();
 
     const response = await fetch("https://api.openai.com/v1/responses", {
@@ -57,12 +61,13 @@ Objetivo: ${objetivo}
 
     const descripcion =
       data.output_text ||
-      data.output?.[0]?.content?.[0]?.text;
+      data.output?.[0]?.content?.[0]?.text ||
+      "No se pudo generar la descripción.";
 
     res.status(200).json({ ok: true, descripcion });
 
-  } catch (err) {
-    console.error("SERVER ERROR:", err);
+  } catch (error) {
+    console.error("SERVER ERROR:", error);
     res.status(500).json({ ok: false });
   }
 }
