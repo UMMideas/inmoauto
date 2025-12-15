@@ -1,28 +1,70 @@
-export default function handler(req, res) {
-  if (req.method !== 'POST') {
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
     return res.status(405).end();
   }
 
-  const {
-    operacion,
-    propiedad,
-    ambientes,
-    metros,
-    precio,
-    barrio,
-    ciudad,
-    objetivo
-  } = req.body;
+  try {
+    const {
+      operacion,
+      propiedad,
+      ambientes,
+      metros,
+      precio,
+      barrio,
+      ciudad,
+      objetivo
+    } = req.body;
 
-  const descripcion = `
-${propiedad} en ${operacion.toLowerCase()} ubicada en ${barrio}, ${ciudad}.
-Cuenta con ${ambientes || 'varios'} ambientes y ${metros || '—'} m².
-Ideal para ${objetivo?.toLowerCase() || 'vivir o invertir'}.
-Valor: ${precio}.
-`.trim();
+    const prompt = `
+Sos un redactor profesional inmobiliario en Argentina.
+Redactá una descripción clara, atractiva y orientada a conversión.
 
-  res.status(200).json({
-    ok: true,
-    descripcion
-  });
+Datos de la propiedad:
+- Operación: ${operacion}
+- Tipo: ${propiedad}
+- Ambientes: ${ambientes}
+- Metros cuadrados: ${metros}
+- Precio: ${precio}
+- Barrio: ${barrio}
+- Ciudad: ${ciudad}
+- Objetivo del aviso: ${objetivo}
+
+Reglas:
+- Español neutro argentino
+- Estilo profesional inmobiliario
+- No usar emojis
+- No exagerar
+- 2 a 3 párrafos
+- Cerrar con una frase comercial sutil
+`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        { role: "system", content: "Sos un experto en redacción inmobiliaria." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7
+    });
+
+    const descripcion = completion.choices[0].message.content;
+
+    res.status(200).json({
+      ok: true,
+      descripcion
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      ok: false,
+      error: "Error generando la descripción"
+    });
+  }
 }
