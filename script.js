@@ -252,3 +252,42 @@ btnPDF?.addEventListener('click', async () => {
   a.download = 'descripcion-pro.pdf';
   a.click();
 });
+
+/* ======================
+   COPIAR TEXTO PRO
+====================== */
+
+const btnCopyText = document.getElementById('btn-copy-text');
+
+btnCopyText?.addEventListener('click', async () => {
+  try {
+    const texto = `
+DESCRIPCIÓN
+-----------
+${document.getElementById('pro-text').textContent}
+
+WHATSAPP
+--------
+${document.getElementById('copy-whatsapp').textContent}
+
+INSTAGRAM
+---------
+${document.getElementById('copy-instagram').textContent}
+
+PORTAL
+------
+${document.getElementById('copy-portal').textContent}
+    `.trim();
+
+    await navigator.clipboard.writeText(texto);
+
+    btnCopyText.textContent = '✅ Copiado';
+    setTimeout(() => {
+      btnCopyText.textContent = '📋 Copiar texto';
+    }, 2000);
+
+  } catch (err) {
+    console.error(err);
+    alert('No se pudo copiar el texto');
+  }
+});
