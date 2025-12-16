@@ -1,15 +1,17 @@
-export default async function handler(req, res) {
-  const { email } = req.body;
+// /api/check-pro.js
+import usuariosPro from '../pro-users';
 
-  // DEMO temporal
-  const usuariosPro = [
-    "test@pro.com",
-    "admin@inmoauto.com"
-  ];
+export default function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ ok: false });
+  }
+
+  const { email } = req.body;
 
   const isPro = usuariosPro.includes(email);
 
-  return res.status(200).json({
+  res.status(200).json({
+    ok: true,
     pro: isPro
   });
 }
