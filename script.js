@@ -316,4 +316,39 @@ document.addEventListener('click', async e => {
   }
 });
 
+document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
+  try {
+    const form = document.getElementById('wizardForm');
+    const data = Object.fromEntries(new FormData(form));
+    const email = data.email;
+
+    if (!email) {
+      alert('Necesitamos tu email para activar la versión PRO');
+      return;
+    }
+
+    const btn = document.getElementById('btn-pay-pro');
+    btn.textContent = 'Redirigiendo a Mercado Pago...';
+    btn.disabled = true;
+
+    const res = await fetch('/api/create-mp-preference', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const json = await res.json();
+
+    if (json.init_point) {
+      window.location.href = json.init_point;
+    } else {
+      throw new Error('No se recibió init_point');
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert('Error al iniciar el pago. Intentá nuevamente.');
+  }
+});
+
 
