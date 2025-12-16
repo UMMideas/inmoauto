@@ -336,3 +336,48 @@ btnExportPDF?.addEventListener('click', async () => {
     btnExportPDF.disabled = false;
   }
 });
+
+/* ======================
+   BOTÓN ACTIVAR PRO (MP)
+====================== */
+
+document.addEventListener('click', async e => {
+  if (!e.target || e.target.id !== 'btn-pay-pro') return;
+
+  try {
+    const form = document.getElementById('wizardForm');
+    const data = Object.fromEntries(new FormData(form));
+
+    // Email ya capturado en el wizard
+    const email = data.email;
+
+    if (!email) {
+      console.error('Email no encontrado para pago');
+      return;
+    }
+
+    e.target.textContent = 'Redirigiendo a pago...';
+    e.target.disabled = true;
+
+    const res = await fetch('/api/create-mp-preference', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    const json = await res.json();
+
+    if (json.init_point) {
+      window.location.href = json.init_point;
+    } else {
+      console.error('init_point no recibido', json);
+      e.target.textContent = '🚀 Activar versión PRO';
+      e.target.disabled = false;
+    }
+
+  } catch (err) {
+    console.error('Error iniciando pago', err);
+    e.target.textContent = '🚀 Activar versión PRO';
+    e.target.disabled = false;
+  }
+});
