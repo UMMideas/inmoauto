@@ -1,4 +1,4 @@
-import mercadopago from "mercadopago";
+import mercadopago from 'mercadopago';
 
 mercadopago.configure({
   access_token: process.env.MP_ACCESS_TOKEN
@@ -10,26 +10,29 @@ export default async function handler(req, res) {
   const preference = {
     items: [
       {
-        title: "INMOAUTO PRO - Plan Mensual",
+        title: 'Activación versión PRO',
         quantity: 1,
-        currency_id: "ARS",
-        unit_price: 9900
+        currency_id: 'USD',
+        unit_price: 10
       }
     ],
     payer: {
       email
     },
-    back_urls: {
-      success: "https://inmoauto.com/success",
-      failure: "https://inmoauto.com/failure",
-      pending: "https://inmoauto.com/pending"
+    metadata: {
+      email
     },
-    auto_return: "approved"
+    back_urls: {
+      success: '/gracias',
+      failure: '/',
+      pending: '/'
+    },
+    auto_return: 'approved'
   };
 
   const response = await mercadopago.preferences.create(preference);
 
-  res.status(200).json({
+  res.json({
     init_point: response.body.init_point
   });
 }
