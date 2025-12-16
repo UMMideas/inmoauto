@@ -115,20 +115,37 @@ btnPro?.addEventListener('click', async () => {
     // 1️⃣ Chequear PRO
     const check = await checkPro(data.email);
 
-    // 2️⃣ NO ES PRO → mostrar pago
+    // 2️⃣ NO ES PRO → SOLO pago, SIN contenido
     if (!check.pro) {
       proResult.style.display = 'block';
+
+      // 🔒 Ocultar contenido PRO
+      document.getElementById('pro-text').textContent =
+        '🔒 Contenido disponible solo para usuarios PRO';
+
+      document.getElementById('copy-whatsapp').textContent = '';
+      document.getElementById('copy-instagram').textContent = '';
+      document.getElementById('copy-portal').textContent = '';
+
+      // Ocultar tabs y export
+      document.querySelector('.tabs')?.style.setProperty('display', 'none');
+      document.getElementById('pro-export')?.style.setProperty('display', 'none');
+
+      // Mostrar pago
       proPay.style.display = 'block';
       return;
     }
 
-    // 3️⃣ ES PRO → generar contenido
+    // 3️⃣ ES PRO → generar contenido real
     btnPro.textContent = 'Generando versión PRO...';
 
     const json = await generarVersionPro(data);
 
     proResult.style.display = 'block';
     proPay.style.display = 'none';
+
+    document.querySelector('.tabs').style.display = 'flex';
+    document.getElementById('pro-export').style.display = 'flex';
 
     document.getElementById('pro-text').textContent =
       json.variantes.clasica;
@@ -152,6 +169,7 @@ btnPro?.addEventListener('click', async () => {
     btnPro.disabled = false;
   }
 });
+
 
 /* ======================
    TABS PRO
@@ -297,4 +315,5 @@ document.addEventListener('click', async e => {
     e.target.disabled = false;
   }
 });
+
 
