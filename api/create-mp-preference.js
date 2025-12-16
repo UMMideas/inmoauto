@@ -1,7 +1,7 @@
-import mercadopago from 'mercadopago';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 
-mercadopago.configure({
-  access_token: process.env.MP_ACCESS_TOKEN
+const client = new MercadoPagoConfig({
+  accessToken: process.env.MP_ACCESS_TOKEN
 });
 
 export default async function handler(req, res) {
@@ -20,40 +20,42 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'MP_ACCESS_TOKEN no configurado' });
     }
 
-    const preference = {
-      items: [
-        {
-          title: 'Activación versión PRO — INMOAUTO',
-          quantity: 1,
-          currency_id: 'ARS', // 👈 CLAVE
-          unit_price: 10000   // ARS (ej: $10.000)
-        }
-      ],
-      payer: {
-        email
-      },
-      back_urls: {
-        success: 'https://inmoauto.vercel.app/gracias',
-        failure: 'https://inmoauto.vercel.app/',
-        pending: 'https://inmoauto.vercel.app/'
-      },
-      auto_return: 'approved',
-      metadata: {
-        email
-      }
-    };
+    const preference = new Preference(client);
 
-    const response = await mercadopago.preferences.create(preference);
+    const response = await preference.create({
+      body: {
+        items: [
+          {
+            title: 'Activación versión PRO — INMOAUTO',
+            quantity: 1,
+            currency_id: 'ARS',
+            unit_price: 10000
+          }
+        ],
+        payer: {
+          email
+        },
+        back_urls: {
+          success: 'https://inmoauto.vercel.app/gracias',
+          failure: 'https://inmoauto.vercel.app/',
+          pending: 'https://inmoauto.vercel.app/'
+        },
+        auto_return: 'approved',
+        metadata: {
+          email
+        }
+      }
+    });
 
     return res.status(200).json({
-      init_point: response.body.init_point
+      init_point: response.init_point
     });
 
   } catch (error) {
-    console.error('❌ Error creando preferencia MP:', error);
+    console.error('❌ Error Mercado Pago:', error);
 
     return res.status(500).json({
-      error: 'No se pudo crear la preferencia de pago'
+      error: 'No se pudo crear la preferencia'
     });
   }
 }
