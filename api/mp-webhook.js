@@ -1,27 +1,43 @@
-import { activarUsuarioPro } from '../lib/pro-store';
+import mercadopago from 'mercadopago';
+import fs from 'fs';
+import path from 'path';
+
+mercadopago.configure({
+  access_token: process.env.MP_ACCESS_TOKEN
+});
+
+const USERS_FILE = path.join(process.cwd(), 'pro-users.json');
+
+function readUsers() {
+  if (!fs.existsSync(USERS_FILE)) return [];
+  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+}
+
+function saveUser(email) {
+  const users = readUsers();
+  if (!users.includes(email)) {
+    users.push(email);
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  }
+}
 
 export default async function handler(req, res) {
   try {
-    const event = req.body;
+    const { type, data } = req.body;
 
-    // Mercado Pago manda muchos eventos, filtramos
-    if (event.type === 'payment') {
-      const paymentId = event.data.id;
+    if (type !== 'payment') return res.status(200).end();
 
-      // ⚠️ Ideal: consultar MP API para validar estado
-      // MVP: asumimos pago aprobado (simplificado)
+    const payment = await mercadopago.payment.findById(data.id);
 
-      const email = event.email || event.additional_info?.payer?.email;
-
-      if (email) {
-        activarUsuarioPro(email);
-      }
+    if (payment.body.status === 'approved') {
+      const email = payment.body.payer.email;
+      saveUser(email);
     }
 
-    res.status(200).json({ received: true });
+    res.status(200).end();
   } catch (err) {
-    console.error('Webhook error:', err);
-    res.status(500).json({ error: 'Webhook error' });
+    console.error('Webhook MP error:', err);
+    res.status(500).end();
   }
 }
 
