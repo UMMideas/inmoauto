@@ -21,13 +21,7 @@ export default async function handler(req, res) {
     },
     metadata: {
       email
-    },
-    back_urls: {
-      success: '/gracias',
-      failure: '/',
-      pending: '/'
-    },
-    auto_return: 'approved'
+    }
   };
 
   const response = await mercadopago.preferences.create(preference);
