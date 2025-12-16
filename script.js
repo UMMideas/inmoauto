@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     result.textContent = 'Generando descripción con IA...';
-    proCTA && (proCTA.style.display = 'none');
+    if (proCTA) proCTA.style.display = 'none';
 
     try {
       const data = Object.fromEntries(new FormData(form));
@@ -99,6 +99,9 @@ const btnPro = document.getElementById('btn-pro');
 const proResult = document.getElementById('pro-result');
 const proPay = document.getElementById('pro-pay');
 
+// ❌ Nunca mostrar CTA PRO al cargar
+if (proPay) proPay.style.display = 'none';
+
 btnPro?.addEventListener('click', async () => {
   try {
     btnPro.textContent = 'Verificando acceso...';
@@ -115,11 +118,10 @@ btnPro?.addEventListener('click', async () => {
     // 1️⃣ Chequear PRO
     const check = await checkPro(data.email);
 
-    // 2️⃣ NO ES PRO → SOLO pago, SIN contenido
+    // 2️⃣ NO ES PRO → contenido bloqueado + CTA pago
     if (!check.pro) {
       proResult.style.display = 'block';
 
-      // 🔒 Ocultar contenido PRO
       document.getElementById('pro-text').textContent =
         '🔒 Contenido disponible solo para usuarios PRO';
 
@@ -127,11 +129,10 @@ btnPro?.addEventListener('click', async () => {
       document.getElementById('copy-instagram').textContent = '';
       document.getElementById('copy-portal').textContent = '';
 
-      // Ocultar tabs y export
       document.querySelector('.tabs')?.style.setProperty('display', 'none');
       document.getElementById('pro-export')?.style.setProperty('display', 'none');
 
-      // Mostrar pago
+      // ✅ Mostrar CTA PRO SOLO ACÁ
       proPay.style.display = 'block';
       return;
     }
@@ -169,7 +170,6 @@ btnPro?.addEventListener('click', async () => {
     btnPro.disabled = false;
   }
 });
-
 
 /* ======================
    TABS PRO
@@ -280,42 +280,6 @@ btnExportPDF?.addEventListener('click', async () => {
    BOTÓN ACTIVAR PRO (MP)
 ====================== */
 
-document.addEventListener('click', async e => {
-  if (e.target?.id !== 'btn-pay-pro') return;
-
-  try {
-    const form = document.getElementById('wizardForm');
-    const data = Object.fromEntries(new FormData(form));
-
-    if (!data.email) {
-      alert('Email requerido para el pago');
-      return;
-    }
-
-    e.target.textContent = 'Redirigiendo a pago...';
-    e.target.disabled = true;
-
-    const res = await fetch('/api/create-mp-preference', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: data.email })
-    });
-
-    const json = await res.json();
-
-    if (json.init_point) {
-      window.location.href = json.init_point;
-    } else {
-      throw new Error('init_point no recibido');
-    }
-
-  } catch (err) {
-    console.error(err);
-    e.target.textContent = '🚀 Activar versión PRO';
-    e.target.disabled = false;
-  }
-});
-
 document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
   try {
     const form = document.getElementById('wizardForm');
@@ -350,5 +314,3 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
-
-
