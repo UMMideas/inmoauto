@@ -16,18 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   document.addEventListener('click', e => {
-    if (e.target.classList.contains('next')) {
-      if (current < steps.length - 1) {
-        current++;
-        updateSteps();
-      }
+    if (e.target.classList.contains('next') && current < steps.length - 1) {
+      current++;
+      updateSteps();
     }
 
-    if (e.target.classList.contains('prev')) {
-      if (current > 0) {
-        current--;
-        updateSteps();
-      }
+    if (e.target.classList.contains('prev') && current > 0) {
+      current--;
+      updateSteps();
     }
   });
 
@@ -43,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
 
     result.textContent = 'Generando descripción con IA...';
-    if (proCTA) proCTA.style.display = 'none';
+    proCTA && (proCTA.style.display = 'none');
 
     try {
       const data = Object.fromEntries(new FormData(form));
@@ -68,58 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
       result.textContent = 'Error al generar la descripción.';
     }
   });
-
-  /* ======================
-     MODAL PRO (EMAIL)
-     ⚠️ NO se abre automáticamente
-  ====================== */
-
-  const proModal = document.getElementById('pro-modal');
-  const closePro = document.getElementById('close-pro');
-  const proForm = document.getElementById('pro-lead-form');
-  const proSuccess = document.getElementById('pro-success');
-
-  closePro?.addEventListener('click', () => {
-    proModal.style.display = 'none';
-  });
-
-  proModal?.addEventListener('click', e => {
-    if (e.target === proModal) {
-      proModal.style.display = 'none';
-    }
-  });
-
-  proForm?.addEventListener('submit', e => {
-    e.preventDefault();
-
-    const email = new FormData(proForm).get('email');
-    console.log('Lead PRO:', email);
-
-    proForm.style.display = 'none';
-    proSuccess.style.display = 'block';
-  });
-
-  /*
-  ==================================================
-  🚫 LISTENER DESACTIVADO (INTENCIONALMENTE)
-  --------------------------------------------------
-  Este listener abría el modal al hacer click en
-  "Obtener versión PRO". Hoy NO debe ejecutarse
-  porque el botón genera variantes PRO reales.
-
-  Se deja comentado para futura lógica de "locked".
-  ==================================================
-
-  const proBtn = document.getElementById('btn-pro');
-  proBtn?.addEventListener('click', () => {
-    proModal.style.display = 'flex';
-  });
-
-  */
 });
 
 /* ======================
-   ENDPOINT PRO
+   HELPERS
 ====================== */
 
 async function generarVersionPro(data) {
@@ -129,60 +77,81 @@ async function generarVersionPro(data) {
     body: JSON.stringify(data)
   });
 
-  if (!res.ok) {
-    throw new Error('Error generando versión PRO');
-  }
+  if (!res.ok) throw new Error('Error generando versión PRO');
+  return res.json();
+}
+
+async function checkPro(email) {
+  const res = await fetch('/api/check-pro', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
 
   return res.json();
 }
 
 /* ======================
-   BOTÓN PRO → GENERAR
+   BOTÓN PRO (CONTROLADO)
 ====================== */
 
 const btnPro = document.getElementById('btn-pro');
 const proResult = document.getElementById('pro-result');
+const proPay = document.getElementById('pro-pay');
 
-if (btnPro) {
-  btnPro.addEventListener('click', async () => {
-    try {
-      btnPro.textContent = 'Generando versión PRO...';
-      btnPro.disabled = true;
+btnPro?.addEventListener('click', async () => {
+  try {
+    btnPro.textContent = 'Verificando acceso...';
+    btnPro.disabled = true;
 
-      const form = document.getElementById('wizardForm');
-      const data = Object.fromEntries(new FormData(form));
+    const form = document.getElementById('wizardForm');
+    const data = Object.fromEntries(new FormData(form));
 
-      const json = await generarVersionPro(data);
-
-      // Mostrar bloque PRO
-      proResult.style.display = 'block';
-
-      // Texto principal
-      document.getElementById('pro-text').textContent =
-        json.variantes.clasica;
-
-      // Copys listos para usar
-      document.getElementById('copy-whatsapp').textContent =
-        json.copy.whatsapp;
-
-      document.getElementById('copy-instagram').textContent =
-        json.copy.instagram;
-
-      document.getElementById('copy-portal').textContent =
-        json.copy.portal;
-
-      // Guardar variantes para tabs
-      window.__proVariantes = json.variantes;
-
-    } catch (err) {
-      console.error(err);
-      alert('No se pudo generar la versión PRO');
-    } finally {
-      btnPro.textContent = 'Obtener versión PRO';
-      btnPro.disabled = false;
+    if (!data.email) {
+      alert('Por favor ingresá un email');
+      return;
     }
-  });
-}
+
+    // 1️⃣ Chequear PRO
+    const check = await checkPro(data.email);
+
+    // 2️⃣ NO ES PRO → mostrar pago
+    if (!check.pro) {
+      proResult.style.display = 'block';
+      proPay.style.display = 'block';
+      return;
+    }
+
+    // 3️⃣ ES PRO → generar contenido
+    btnPro.textContent = 'Generando versión PRO...';
+
+    const json = await generarVersionPro(data);
+
+    proResult.style.display = 'block';
+    proPay.style.display = 'none';
+
+    document.getElementById('pro-text').textContent =
+      json.variantes.clasica;
+
+    document.getElementById('copy-whatsapp').textContent =
+      json.copy.whatsapp;
+
+    document.getElementById('copy-instagram').textContent =
+      json.copy.instagram;
+
+    document.getElementById('copy-portal').textContent =
+      json.copy.portal;
+
+    window.__proVariantes = json.variantes;
+
+  } catch (err) {
+    console.error(err);
+    alert('Error al procesar versión PRO');
+  } finally {
+    btnPro.textContent = 'Obtener versión PRO';
+    btnPro.disabled = false;
+  }
+});
 
 /* ======================
    TABS PRO
@@ -203,54 +172,6 @@ document.addEventListener('click', e => {
     document.getElementById('pro-text').textContent =
       window.__proVariantes[tipo];
   }
-});
-
-const btnCopy = document.getElementById('btn-copy-text');
-
-btnCopy?.addEventListener('click', () => {
-  let texto = '';
-
-  if (window.__proVariantes) {
-    texto += 'DESCRIPCIÓN\n\n';
-    texto += window.__proVariantes.clasica + '\n\n';
-  }
-
-  texto += 'COPY WHATSAPP\n' +
-    document.getElementById('copy-whatsapp').textContent + '\n\n';
-
-  texto += 'COPY INSTAGRAM\n' +
-    document.getElementById('copy-instagram').textContent + '\n\n';
-
-  texto += 'COPY PORTAL\n' +
-    document.getElementById('copy-portal').textContent;
-
-  navigator.clipboard.writeText(texto);
-  alert('Texto copiado al portapapeles');
-});
-
-const btnPDF = document.getElementById('btn-export-pdf');
-
-btnPDF?.addEventListener('click', async () => {
-  const res = await fetch('/api/exportar-pdf', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      variantes: window.__proVariantes,
-      copy: {
-        whatsapp: document.getElementById('copy-whatsapp').textContent,
-        instagram: document.getElementById('copy-instagram').textContent,
-        portal: document.getElementById('copy-portal').textContent
-      }
-    })
-  });
-
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'descripcion-pro.pdf';
-  a.click();
 });
 
 /* ======================
@@ -323,7 +244,7 @@ btnExportPDF?.addEventListener('click', async () => {
 
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'descripcion-inmobiliaria.pdf';
+    a.download = 'descripcion-pro.pdf';
     a.click();
 
     window.URL.revokeObjectURL(url);
@@ -342,17 +263,14 @@ btnExportPDF?.addEventListener('click', async () => {
 ====================== */
 
 document.addEventListener('click', async e => {
-  if (!e.target || e.target.id !== 'btn-pay-pro') return;
+  if (e.target?.id !== 'btn-pay-pro') return;
 
   try {
     const form = document.getElementById('wizardForm');
     const data = Object.fromEntries(new FormData(form));
 
-    // Email ya capturado en el wizard
-    const email = data.email;
-
-    if (!email) {
-      console.error('Email no encontrado para pago');
+    if (!data.email) {
+      alert('Email requerido para el pago');
       return;
     }
 
@@ -362,7 +280,7 @@ document.addEventListener('click', async e => {
     const res = await fetch('/api/create-mp-preference', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email: data.email })
     });
 
     const json = await res.json();
@@ -370,14 +288,13 @@ document.addEventListener('click', async e => {
     if (json.init_point) {
       window.location.href = json.init_point;
     } else {
-      console.error('init_point no recibido', json);
-      e.target.textContent = '🚀 Activar versión PRO';
-      e.target.disabled = false;
+      throw new Error('init_point no recibido');
     }
 
   } catch (err) {
-    console.error('Error iniciando pago', err);
+    console.error(err);
     e.target.textContent = '🚀 Activar versión PRO';
     e.target.disabled = false;
   }
 });
+
