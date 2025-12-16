@@ -1,56 +1,46 @@
+import { esUsuarioPro } from '../lib/pro-store';
+
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ ok: false });
+  try {
+    const data = req.body;
+    const email = data.email;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email requerido' });
+    }
+
+    // 🔐 Chequeo PRO
+    const isPro = esUsuarioPro(email);
+
+    if (!isPro) {
+      return res.status(403).json({
+        error: 'Usuario no PRO'
+      });
+    }
+
+    // ⚙️ Simulación IA PRO (por ahora)
+    const descripcionBase = `
+PH en venta ubicada en ${data.zona}, ${data.ciudad}.
+Cuenta con ${data.ambientes} ambientes y una superficie aproximada de ${data.superficie} m².
+Ideal tanto para vivienda como para inversión.
+    `.trim();
+
+    res.json({
+      variantes: {
+        clasica: descripcionBase,
+        premium: descripcionBase + '\n\nTerminaciones de calidad y excelente proyección.',
+        inversion: descripcionBase + '\n\nAlta rentabilidad y demanda sostenida.'
+      },
+      copy: {
+        whatsapp: '📲 Consultanos hoy y coordiná una visita.',
+        instagram: '🏡 Una oportunidad única que no se repite.',
+        portal: 'Propiedad ideal para quienes buscan ubicación y funcionalidad.'
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error procesando versión PRO' });
   }
-
-  const {
-    operacion,
-    propiedad,
-    ambientes,
-    metros,
-    precio,
-    barrio,
-    ciudad,
-    objetivo
-  } = req.body;
-
-  // ⚠️ MODO PRO DEMO (sin OpenAI todavía)
-  // Esto luego se reemplaza por IA real
-
-  const base = `${propiedad} en ${operacion.toLowerCase()} ubicada en ${barrio}, ${ciudad}.
-Cuenta con ${ambientes} ambientes y ${metros} m².
-Valor de referencia: USD ${precio}.`;
-
-  const variantes = {
-    clasica: `${base}
-Una opción sólida para quienes buscan una propiedad funcional y bien ubicada.`,
-
-    premium: `${base}
-Destaca por su calidad constructiva, entorno y potencial para un público exigente.`,
-
-    inversion: `${base}
-Excelente oportunidad de inversión por su ubicación y proyección de renta.`
-  };
-
-  const copy = {
-    whatsapp: `🏡 ${propiedad} en ${barrio}
-${ambientes} amb • ${metros} m²
-USD ${precio}
-📲 Consultanos para más info`,
-
-    instagram: `🏡 NUEVO INGRESO
-${propiedad} en ${barrio}, ${ciudad}
-${ambientes} ambientes · ${metros} m²
-Ideal para ${objetivo.toLowerCase()}
-📩 Escribinos por DM`,
-
-    portal: `${propiedad} en ${operacion} en ${barrio}, ${ciudad}. ${ambientes} ambientes, ${metros} m². Valor USD ${precio}.`
-  };
-
-  return res.status(200).json({
-    ok: true,
-    pro: true,
-    variantes,
-    copy
-  });
 }
+
