@@ -1,7 +1,9 @@
-// pro-users.js
-const usuariosPro = [
-  "cliente@inmobiliaria.com",
-  "admin@inmoauto.com"
-];
+const usuariosPro = [];
+
+export function agregarUsuarioPro(email) {
+  if (!usuariosPro.includes(email)) {
+    usuariosPro.push(email);
+  }
+}
 
 export default usuariosPro;
