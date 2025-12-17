@@ -251,3 +251,17 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
+
+/* ======================
+   UPSELL PLANES MENSUALES
+====================== */
+
+function mostrarPlanesMensuales() {
+  const planes = document.getElementById('planes-pro');
+  if (planes) {
+    planes.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+
+// Hook simple desde errores PRO futuros
+window.mostrarPlanesMensuales = mostrarPlanesMensuales;
