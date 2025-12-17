@@ -101,9 +101,10 @@ const proPay = document.getElementById('pro-pay');
 const proNotice = document.getElementById('pro-notice');
 const proCredits = document.getElementById('pro-credits');
 
-// ❌ Nunca mostrar CTA PRO al cargar
+// Estado inicial
 if (proPay) proPay.style.display = 'none';
 if (proNotice) proNotice.style.display = 'none';
+if (proCredits) proCredits.style.display = 'none';
 
 btnPro?.addEventListener('click', async () => {
   try {
@@ -121,10 +122,11 @@ btnPro?.addEventListener('click', async () => {
     // 1️⃣ Chequear PRO
     const check = await checkPro(data.email);
 
-    // 2️⃣ NO ES PRO → contenido bloqueado + CTA pago
+    // 2️⃣ NO ES PRO
     if (!check.pro) {
       proResult.style.display = 'block';
       if (proNotice) proNotice.style.display = 'none';
+      if (proCredits) proCredits.style.display = 'none';
 
       document.getElementById('pro-text').textContent =
         '🔒 Contenido disponible solo para usuarios PRO';
@@ -137,30 +139,24 @@ btnPro?.addEventListener('click', async () => {
       document.getElementById('pro-export')?.style.setProperty('display', 'none');
 
       proPay.style.display = 'block';
-      if (proCredits) proCredits.style.display = 'none';
       return;
     }
 
-    // 3️⃣ ES PRO → generar contenido real + MICRO UX
+    // 3️⃣ ES PRO
     btnPro.textContent = 'Generando versión PRO...';
-
-    if (proNotice) {
-      proNotice.innerHTML =
-        '✅ Versión PRO activa<br><small>Gracias por confiar en INMOAUTO</small>';
-      proNotice.style.display = 'block';
-    }
 
     const json = await generarVersionPro(data);
 
+    // Aviso PRO activo
     if (proNotice) {
       proNotice.innerHTML =
         '✅ Versión PRO activa<br><small>Gracias por confiar en INMOAUTO</small>';
       proNotice.style.display = 'block';
     }
-    
+
+    // Créditos restantes
     if (proCredits && typeof json.credits_left === 'number') {
-      proCredits.textContent =
-        `✨ Créditos disponibles: ${json.credits_left}`;
+      proCredits.textContent = `✨ Créditos disponibles: ${json.credits_left}`;
       proCredits.style.display = 'block';
     }
 
@@ -184,7 +180,7 @@ btnPro?.addEventListener('click', async () => {
 
     window.__proVariantes = json.variantes;
 
-    // 🟢 C8.5 — CTA secundario oculto (preparado para C9)
+    // CTA upsell oculto (preparado para C10)
     let upsell = document.getElementById('pro-upsell');
     if (!upsell) {
       upsell = document.createElement('p');
@@ -193,7 +189,7 @@ btnPro?.addEventListener('click', async () => {
       upsell.style.fontSize = '13px';
       upsell.style.color = '#777';
       upsell.style.marginTop = '16px';
-      upsell.style.display = 'none'; // ⚠️ oculto por ahora
+      upsell.style.display = 'none';
 
       document.getElementById('pro-export')?.appendChild(upsell);
     }
@@ -350,4 +346,3 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
-
