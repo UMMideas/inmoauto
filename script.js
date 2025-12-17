@@ -99,6 +99,7 @@ const btnPro = document.getElementById('btn-pro');
 const proResult = document.getElementById('pro-result');
 const proPay = document.getElementById('pro-pay');
 const proNotice = document.getElementById('pro-notice');
+const proCredits = document.getElementById('pro-credits');
 
 // ❌ Nunca mostrar CTA PRO al cargar
 if (proPay) proPay.style.display = 'none';
@@ -136,6 +137,7 @@ btnPro?.addEventListener('click', async () => {
       document.getElementById('pro-export')?.style.setProperty('display', 'none');
 
       proPay.style.display = 'block';
+      if (proCredits) proCredits.style.display = 'none';
       return;
     }
 
@@ -149,6 +151,18 @@ btnPro?.addEventListener('click', async () => {
     }
 
     const json = await generarVersionPro(data);
+
+    if (proNotice) {
+      proNotice.innerHTML =
+        '✅ Versión PRO activa<br><small>Gracias por confiar en INMOAUTO</small>';
+      proNotice.style.display = 'block';
+    }
+    
+    if (proCredits && typeof json.credits_left === 'number') {
+      proCredits.textContent =
+        `✨ Créditos disponibles: ${json.credits_left}`;
+      proCredits.style.display = 'block';
+    }
 
     proResult.style.display = 'block';
     proPay.style.display = 'none';
@@ -336,3 +350,4 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
+
