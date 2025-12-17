@@ -98,9 +98,11 @@ async function checkPro(email) {
 const btnPro = document.getElementById('btn-pro');
 const proResult = document.getElementById('pro-result');
 const proPay = document.getElementById('pro-pay');
+const proNotice = document.getElementById('pro-notice');
 
 // ❌ Nunca mostrar CTA PRO al cargar
 if (proPay) proPay.style.display = 'none';
+if (proNotice) proNotice.style.display = 'none';
 
 btnPro?.addEventListener('click', async () => {
   try {
@@ -122,6 +124,8 @@ btnPro?.addEventListener('click', async () => {
     if (!check.pro) {
       proResult.style.display = 'block';
 
+      if (proNotice) proNotice.style.display = 'none';
+
       document.getElementById('pro-text').textContent =
         '🔒 Contenido disponible solo para usuarios PRO';
 
@@ -137,8 +141,13 @@ btnPro?.addEventListener('click', async () => {
       return;
     }
 
-    // 3️⃣ ES PRO → generar contenido real
+    // 3️⃣ ES PRO → generar contenido real + MICRO UX
     btnPro.textContent = 'Generando versión PRO...';
+
+    if (proNotice) {
+      proNotice.textContent = '✅ Versión PRO activa';
+      proNotice.style.display = 'block';
+    }
 
     const json = await generarVersionPro(data);
 
