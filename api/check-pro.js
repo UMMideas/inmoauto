@@ -37,7 +37,7 @@ export default function handler(req, res) {
       }
     }
 
-    // 🔢 Validar créditos
+    // 🔢 Sin créditos
     if (user.credits <= 0) {
       return res.json({ pro: false, reason: 'no_credits' });
     }
@@ -46,7 +46,7 @@ export default function handler(req, res) {
     return res.json({
       pro: true,
       plan: user.plan,
-      credits: user.credits
+      credits_left: user.credits // 🔑 CLAVE
     });
 
   } catch (err) {
