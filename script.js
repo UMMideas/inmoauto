@@ -147,14 +147,12 @@ btnPro?.addEventListener('click', async () => {
 
     const json = await generarVersionPro(data);
 
-    // Aviso PRO activo
     if (proNotice) {
       proNotice.innerHTML =
         '✅ Versión PRO activa<br><small>Gracias por confiar en INMOAUTO</small>';
       proNotice.style.display = 'block';
     }
 
-    // Créditos restantes
     if (proCredits && typeof json.credits_left === 'number') {
       proCredits.textContent = `✨ Créditos disponibles: ${json.credits_left}`;
       proCredits.style.display = 'block';
@@ -179,20 +177,6 @@ btnPro?.addEventListener('click', async () => {
       json.copy.portal;
 
     window.__proVariantes = json.variantes;
-
-    // CTA upsell oculto (preparado para C10)
-    let upsell = document.getElementById('pro-upsell');
-    if (!upsell) {
-      upsell = document.createElement('p');
-      upsell.id = 'pro-upsell';
-      upsell.textContent = '¿Querés generar múltiples propiedades por mes?';
-      upsell.style.fontSize = '13px';
-      upsell.style.color = '#777';
-      upsell.style.marginTop = '16px';
-      upsell.style.display = 'none';
-
-      document.getElementById('pro-export')?.appendChild(upsell);
-    }
 
   } catch (err) {
     console.error(err);
@@ -225,90 +209,6 @@ document.addEventListener('click', e => {
 });
 
 /* ======================
-   COPIAR TEXTO PRO
-====================== */
-
-const btnCopyText = document.getElementById('btn-copy-text');
-
-btnCopyText?.addEventListener('click', async () => {
-  try {
-    const texto = `
-DESCRIPCIÓN
------------
-${document.getElementById('pro-text').textContent}
-
-WHATSAPP
---------
-${document.getElementById('copy-whatsapp').textContent}
-
-INSTAGRAM
----------
-${document.getElementById('copy-instagram').textContent}
-
-PORTAL
-------
-${document.getElementById('copy-portal').textContent}
-    `.trim();
-
-    await navigator.clipboard.writeText(texto);
-
-    btnCopyText.textContent = '✅ Copiado';
-    setTimeout(() => {
-      btnCopyText.textContent = '📋 Copiar texto';
-    }, 2000);
-
-  } catch (err) {
-    console.error(err);
-    alert('No se pudo copiar el texto');
-  }
-});
-
-/* ======================
-   EXPORTAR PDF
-====================== */
-
-const btnExportPDF = document.getElementById('btn-export-pdf');
-
-btnExportPDF?.addEventListener('click', async () => {
-  try {
-    btnExportPDF.textContent = 'Generando PDF...';
-    btnExportPDF.disabled = true;
-
-    const payload = {
-      descripcion: document.getElementById('pro-text').textContent,
-      copy: {
-        whatsapp: document.getElementById('copy-whatsapp').textContent,
-        instagram: document.getElementById('copy-instagram').textContent,
-        portal: document.getElementById('copy-portal').textContent
-      }
-    };
-
-    const res = await fetch('/api/exportar-pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'descripcion-pro.pdf';
-    a.click();
-
-    window.URL.revokeObjectURL(url);
-
-  } catch (err) {
-    console.error(err);
-    alert('No se pudo generar el PDF');
-  } finally {
-    btnExportPDF.textContent = '📄 Exportar PDF';
-    btnExportPDF.disabled = false;
-  }
-});
-
-/* ======================
    BOTÓN ACTIVAR PRO (MP)
 ====================== */
 
@@ -324,13 +224,18 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     }
 
     const btn = document.getElementById('btn-pay-pro');
-    btn.textContent = 'Activando versión PRO...';
+    btn.textContent = 'Redirigiendo a Mercado Pago...';
     btn.disabled = true;
 
     const res = await fetch('/api/create-mp-preference', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+
+      // 🔑 PLAN DEFINIDO (C10.3)
+      body: JSON.stringify({
+        email,
+        plan: 'pack_10'
+      })
     });
 
     const json = await res.json();
