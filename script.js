@@ -301,7 +301,7 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     }
 
     const btn = document.getElementById('btn-pay-pro');
-    btn.textContent = 'Redirigiendo a Mercado Pago...';
+    btn.textContent = 'Activando versión PRO...';
     btn.disabled = true;
 
     const res = await fetch('/api/create-mp-preference', {
@@ -323,3 +323,4 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
+
