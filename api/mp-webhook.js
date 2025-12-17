@@ -10,24 +10,32 @@ mercadopago.configure({
 const USERS_FILE = path.join(process.cwd(), 'pro-users.json');
 
 /* ======================
-   HELPERS USUARIOS PRO
+   HELPERS STORE
 ====================== */
 
-function readUsers() {
-  if (!fs.existsSync(USERS_FILE)) return [];
+function readStore() {
+  if (!fs.existsSync(USERS_FILE)) {
+    return { users: {} };
+  }
   return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 }
 
-function saveUser(email) {
-  const users = readUsers();
-  if (!users.includes(email)) {
-    users.push(email);
-    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-  }
+function writeStore(data) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
 }
 
 /* ======================
-   VERIFICAR FIRMA WEBHOOK
+   PLANES (FUENTE DE VERDAD)
+====================== */
+
+const PLANS = {
+  pack_5: { credits: 5, expiresInDays: null },
+  pack_10: { credits: 10, expiresInDays: null },
+  mensual: { credits: 30, expiresInDays: 30 }
+};
+
+/* ======================
+   VERIFICAR FIRMA MP
 ====================== */
 
 function verifySignature(req) {
@@ -50,41 +58,69 @@ function verifySignature(req) {
 }
 
 /* ======================
-   HANDLER WEBHOOK MP
+   HANDLER
 ====================== */
 
 export default async function handler(req, res) {
   try {
-    // 🔒 1️⃣ Validar firma
     if (!verifySignature(req)) {
-      console.warn('❌ Webhook MP con firma inválida');
+      console.warn('❌ Firma MP inválida');
       return res.status(401).end();
     }
 
     const { type, data } = req.body;
+    if (type !== 'payment') return res.status(200).end();
 
-    // MP envía muchos eventos, solo nos interesa payment
-    if (type !== 'payment') {
+    const payment = await mercadopago.payment.findById(data.id);
+    const info = payment.body;
+
+    if (info.status !== 'approved') return res.status(200).end();
+
+    const email = info.payer?.email;
+    const planId = info.metadata?.plan_id;
+    const paymentId = info.id?.toString();
+
+    if (!email || !planId || !PLANS[planId]) {
+      console.warn('⚠️ Pago aprobado sin metadata válida');
       return res.status(200).end();
     }
 
-    // 🔍 Obtener pago real desde MP
-    const payment = await mercadopago.payment.findById(data.id);
+    const store = readStore();
 
-    // ✅ Solo pagos aprobados
-    if (payment.body.status === 'approved') {
-      const email = payment.body.payer?.email;
-
-      if (email) {
-        saveUser(email);
-        console.log('✅ Usuario PRO activado:', email);
-      }
+    if (!store.users[email]) {
+      store.users[email] = {
+        plan: planId,
+        credits: 0,
+        expiresAt: null,
+        payments: []
+      };
     }
+
+    // 🔒 Anti-duplicados
+    if (store.users[email].payments.includes(paymentId)) {
+      return res.status(200).end();
+    }
+
+    const plan = PLANS[planId];
+
+    store.users[email].credits += plan.credits;
+
+    if (plan.expiresInDays) {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + plan.expiresInDays);
+      store.users[email].expiresAt = expires.toISOString();
+    }
+
+    store.users[email].payments.push(paymentId);
+
+    writeStore(store);
+
+    console.log(`✅ Créditos cargados: ${email} → ${planId}`);
 
     return res.status(200).end();
 
   } catch (err) {
-    console.error('❌ Webhook MP error:', err);
+    console.error('❌ mp-webhook error:', err);
     return res.status(500).end();
   }
 }
