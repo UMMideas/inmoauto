@@ -1,0 +1,13 @@
+{
+  "users": {
+    "cliente@inmobiliaria.com": {
+      "plan": "pack_10",
+      "credits": 7
+    },
+    "mensual@empresa.com": {
+      "plan": "mensual",
+      "credits": 999,
+      "expiresAt": "2025-10-01T00:00:00.000Z"
+    }
+  }
+}
