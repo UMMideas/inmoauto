@@ -123,7 +123,6 @@ btnPro?.addEventListener('click', async () => {
     // 2️⃣ NO ES PRO → contenido bloqueado + CTA pago
     if (!check.pro) {
       proResult.style.display = 'block';
-
       if (proNotice) proNotice.style.display = 'none';
 
       document.getElementById('pro-text').textContent =
@@ -136,7 +135,6 @@ btnPro?.addEventListener('click', async () => {
       document.querySelector('.tabs')?.style.setProperty('display', 'none');
       document.getElementById('pro-export')?.style.setProperty('display', 'none');
 
-      // ✅ Mostrar CTA PRO SOLO ACÁ
       proPay.style.display = 'block';
       return;
     }
@@ -145,7 +143,8 @@ btnPro?.addEventListener('click', async () => {
     btnPro.textContent = 'Generando versión PRO...';
 
     if (proNotice) {
-      proNotice.textContent = '✅ Versión PRO activa';
+      proNotice.innerHTML =
+        '✅ Versión PRO activa<br><small>Gracias por confiar en INMOAUTO</small>';
       proNotice.style.display = 'block';
     }
 
@@ -170,6 +169,20 @@ btnPro?.addEventListener('click', async () => {
       json.copy.portal;
 
     window.__proVariantes = json.variantes;
+
+    // 🟢 C8.5 — CTA secundario oculto (preparado para C9)
+    let upsell = document.getElementById('pro-upsell');
+    if (!upsell) {
+      upsell = document.createElement('p');
+      upsell.id = 'pro-upsell';
+      upsell.textContent = '¿Querés generar múltiples propiedades por mes?';
+      upsell.style.fontSize = '13px';
+      upsell.style.color = '#777';
+      upsell.style.marginTop = '16px';
+      upsell.style.display = 'none'; // ⚠️ oculto por ahora
+
+      document.getElementById('pro-export')?.appendChild(upsell);
+    }
 
   } catch (err) {
     console.error(err);
@@ -323,4 +336,3 @@ document.getElementById('btn-pay-pro')?.addEventListener('click', async () => {
     alert('Error al iniciar el pago. Intentá nuevamente.');
   }
 });
-
