@@ -1,4 +1,26 @@
-import { esUsuarioPro } from '../lib/pro-store';
+import fs from 'fs';
+import path from 'path';
+
+/* ======================
+   DATA STORE
+====================== */
+
+const USERS_FILE = path.join(process.cwd(), 'pro-users.json');
+
+function readUsers() {
+  if (!fs.existsSync(USERS_FILE)) {
+    return { users: {} };
+  }
+  return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+}
+
+function writeUsers(data) {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
+}
+
+/* ======================
+   HANDLER
+====================== */
 
 export default async function handler(req, res) {
   try {
@@ -6,41 +28,64 @@ export default async function handler(req, res) {
     const email = data.email;
 
     if (!email) {
-      return res.status(400).json({ error: 'Email requerido' });
+      return res.status(401).json({ error: 'Email requerido' });
     }
 
-    // 🔐 Chequeo PRO
-    const isPro = esUsuarioPro(email);
+    const store = readUsers();
+    const user = store.users[email];
 
-    if (!isPro) {
-      return res.status(403).json({
-        error: 'Usuario no PRO'
-      });
+    // ❌ No PRO
+    if (!user) {
+      return res.status(403).json({ error: 'Usuario no PRO' });
     }
 
-    // ⚙️ Simulación IA PRO (por ahora)
-    const descripcionBase = `
-PH en venta ubicada en ${data.zona}, ${data.ciudad}.
-Cuenta con ${data.ambientes} ambientes y una superficie aproximada de ${data.superficie} m².
-Ideal tanto para vivienda como para inversión.
-    `.trim();
+    // ⏳ Expirado
+    if (user.expiresAt && new Date() > new Date(user.expiresAt)) {
+      return res.status(403).json({ error: 'Plan expirado' });
+    }
 
-    res.json({
-      variantes: {
-        clasica: descripcionBase,
-        premium: descripcionBase + '\n\nTerminaciones de calidad y excelente proyección.',
-        inversion: descripcionBase + '\n\nAlta rentabilidad y demanda sostenida.'
-      },
-      copy: {
-        whatsapp: '📲 Consultanos hoy y coordiná una visita.',
-        instagram: '🏡 Una oportunidad única que no se repite.',
-        portal: 'Propiedad ideal para quienes buscan ubicación y funcionalidad.'
-      }
+    // 🔢 Sin créditos
+    if (user.credits <= 0) {
+      return res.status(403).json({ error: 'Sin créditos disponibles' });
+    }
+
+    /* ======================
+       GENERACIÓN (mock IA)
+       👉 Acá luego va tu IA real
+    ====================== */
+
+    const variantes = {
+      clasica: `Descripción clásica PRO para ${data.propiedad} en ${data.barrio}.`,
+      premium: `Descripción premium PRO destacando valor y exclusividad.`,
+      inversion: `Descripción orientada a inversores con foco en rentabilidad.`
+    };
+
+    const copy = {
+      whatsapp: '📲 Consultanos ahora por esta propiedad única.',
+      instagram: '🏡 Una oportunidad que no se publica todos los días.',
+      portal: 'Propiedad destacada con excelente proyección.'
+    };
+
+    /* ======================
+       DESCONTAR CRÉDITO
+    ====================== */
+
+    user.credits -= 1;
+    store.users[email] = user;
+    writeUsers(store);
+
+    /* ======================
+       RESPUESTA
+    ====================== */
+
+    return res.json({
+      variantes,
+      copy,
+      credits_left: user.credits
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Error procesando versión PRO' });
+    console.error('generar-descripcion-pro error:', err);
+    res.status(500).json({ error: 'Error generando versión PRO' });
   }
 }
-
