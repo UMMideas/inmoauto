@@ -5,6 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const proPay = document.getElementById('pro-pay');
   const proNotice = document.getElementById('pro-notice');
   const proCredits = document.getElementById('pro-credits');
+  const btnPayPro = document.getElementById('btn-pay-pro');
+
+  let forcedPlan = null; // 👈 C10.7
 
   async function checkPro(email) {
     const res = await fetch('/api/check-pro', {
@@ -39,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       btnPro.textContent = 'Verificando acceso...';
       btnPro.disabled = true;
+      forcedPlan = null;
 
       const form = document.getElementById('wizardForm');
       const data = Object.fromEntries(new FormData(form));
@@ -51,27 +55,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const check = await checkPro(email);
 
-      // ❌ NO PRO / BLOQUEOS
+      /* ======================
+         ❌ BLOQUEOS PRO
+      ====================== */
+
       if (!check.pro) {
         proResult.style.display = 'block';
         proPay.style.display = 'block';
 
-        proNotice.textContent = check.message;
-        proNotice.style.display = 'block';
+        proCredits.style.display = 'none';
 
-        if (check.reason === 'no_credits' || check.reason === 'expired') {
-          mostrarPlanesMensuales();
+        if (check.reason === 'no_credits') {
+          proNotice.innerHTML =
+            '⚠️ Te quedaste sin créditos.<br><small>Pasate al plan mensual y seguí generando sin límites.</small>';
+          forcedPlan = 'mensual';
         }
 
+        if (check.reason === 'expired') {
+          proNotice.innerHTML =
+            '⏳ Tu plan mensual venció.<br><small>Reactivá tu plan para seguir usando INMOAUTO.</small>';
+          forcedPlan = 'mensual';
+        }
+
+        if (!check.reason) {
+          proNotice.innerHTML =
+            '🔒 Función disponible solo para usuarios PRO.';
+          forcedPlan = 'pack_10';
+        }
+
+        proNotice.style.display = 'block';
+        mostrarPlanesMensuales();
         return;
       }
 
-      // ✅ PRO OK
+      /* ======================
+         ✅ PRO OK
+      ====================== */
+
       btnPro.textContent = 'Generando versión PRO...';
 
       const json = await generarVersionPro(data);
 
-      proNotice.textContent = '✅ Versión PRO generada correctamente';
+      proNotice.innerHTML =
+        '✅ Versión PRO generada correctamente';
       proNotice.style.display = 'block';
 
       proCredits.textContent =
@@ -97,13 +123,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
+
       if (err.reason === 'no_credits' || err.reason === 'expired') {
+        forcedPlan = 'mensual';
         mostrarPlanesMensuales();
       }
+
       alert('No se pudo generar la versión PRO');
     } finally {
       btnPro.textContent = 'Obtener versión PRO';
       btnPro.disabled = false;
+    }
+  });
+
+  /* ======================
+     🚀 ACTIVAR PRO (MP)
+  ====================== */
+
+  btnPayPro?.addEventListener('click', async () => {
+    try {
+      const form = document.getElementById('wizardForm');
+      const data = Object.fromEntries(new FormData(form));
+      const email = data.email;
+
+      if (!email) {
+        alert('Necesitamos tu email para continuar');
+        return;
+      }
+
+      btnPayPro.textContent = 'Redirigiendo a Mercado Pago...';
+      btnPayPro.disabled = true;
+
+      const plan = forcedPlan || 'pack_10';
+
+      const res = await fetch('/api/create-mp-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, plan })
+      });
+
+      const json = await res.json();
+
+      if (!json.init_point) {
+        throw new Error('No se pudo iniciar el pago');
+      }
+
+      window.location.href = json.init_point;
+
+    } catch (err) {
+      console.error(err);
+      alert('Error al iniciar el pago');
+    } finally {
+      btnPayPro.textContent = '🚀 Activar versión PRO';
+      btnPayPro.disabled = false;
     }
   });
 
