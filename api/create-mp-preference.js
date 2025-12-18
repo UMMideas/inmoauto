@@ -64,17 +64,13 @@ export default async function handler(req, res) {
             unit_price: selectedPlan.price
           }
         ],
-        payer: {
-          email
-        },
+        payer: { email },
         back_urls: {
           success: 'https://inmoauto.vercel.app/gracias',
           failure: 'https://inmoauto.vercel.app/',
           pending: 'https://inmoauto.vercel.app/'
         },
         auto_return: 'approved',
-
-        /* 🔑 CLAVE DEL SISTEMA */
         metadata: {
           email,
           plan_id: plan
@@ -88,7 +84,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('❌ Error Mercado Pago:', error);
-
     return res.status(500).json({
       error: 'No se pudo crear la preferencia'
     });
