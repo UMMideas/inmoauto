@@ -7,7 +7,6 @@ function readUsers() {
   if (!fs.existsSync(USERS_FILE)) {
     return { users: {} };
   }
-
   return JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
 }
 
@@ -26,7 +25,6 @@ export default function handler(req, res) {
     const data = readUsers();
     const user = data.users[email];
 
-    // ❌ No existe
     if (!user) {
       return res.json({
         pro: false,
@@ -35,7 +33,12 @@ export default function handler(req, res) {
       });
     }
 
-    // ⏳ Plan mensual vencido
+    /* ======================
+       ⏳ PLAN MENSUAL
+    ====================== */
+
+    let expiresSoon = false;
+
     if (user.expiresAt) {
       const now = new Date();
       const expires = new Date(user.expiresAt);
@@ -47,9 +50,17 @@ export default function handler(req, res) {
           message: 'Tu plan PRO venció. Renovalo para seguir usando la versión PRO'
         });
       }
+
+      const diffHours = (expires - now) / (1000 * 60 * 60);
+      if (diffHours <= 72) {
+        expiresSoon = true;
+      }
     }
 
-    // 🔢 Sin créditos
+    /* ======================
+       🔢 CRÉDITOS
+    ====================== */
+
     if (user.credits <= 0) {
       return res.json({
         pro: false,
@@ -58,11 +69,20 @@ export default function handler(req, res) {
       });
     }
 
-    // ✅ OK
+    const lowCredits = user.credits <= 3;
+
+    /* ======================
+       ✅ PRO OK
+    ====================== */
+
     return res.json({
       pro: true,
       plan: user.plan,
-      credits_left: user.credits
+      credits_left: user.credits,
+      warnings: {
+        lowCredits,
+        expiresSoon
+      }
     });
 
   } catch (err) {
