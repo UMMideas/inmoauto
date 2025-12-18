@@ -1,10 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 
-/* ======================
-   DATA STORE
-====================== */
-
 const USERS_FILE = path.join(process.cwd(), 'pro-users.json');
 
 function readUsers() {
@@ -18,17 +14,16 @@ function writeUsers(data) {
   fs.writeFileSync(USERS_FILE, JSON.stringify(data, null, 2));
 }
 
-/* ======================
-   HANDLER
-====================== */
-
 export default async function handler(req, res) {
   try {
     const data = req.body;
     const email = data.email;
 
     if (!email) {
-      return res.status(401).json({ error: 'Email requerido' });
+      return res.status(401).json({
+        error: 'Email requerido',
+        reason: 'no_email'
+      });
     }
 
     const store = readUsers();
@@ -36,22 +31,30 @@ export default async function handler(req, res) {
 
     // ❌ No PRO
     if (!user) {
-      return res.status(403).json({ error: 'Usuario no PRO' });
+      return res.status(403).json({
+        error: 'Usuario no PRO',
+        reason: 'not_pro'
+      });
     }
 
     // ⏳ Expirado
     if (user.expiresAt && new Date() > new Date(user.expiresAt)) {
-      return res.status(403).json({ error: 'Plan expirado' });
+      return res.status(403).json({
+        error: 'Plan expirado',
+        reason: 'expired'
+      });
     }
 
     // 🔢 Sin créditos
     if (user.credits <= 0) {
-      return res.status(403).json({ error: 'Sin créditos disponibles' });
+      return res.status(403).json({
+        error: 'Sin créditos disponibles',
+        reason: 'no_credits'
+      });
     }
 
     /* ======================
        GENERACIÓN (mock IA)
-       👉 Acá luego va tu IA real
     ====================== */
 
     const variantes = {
@@ -74,10 +77,6 @@ export default async function handler(req, res) {
     store.users[email] = user;
     writeUsers(store);
 
-    /* ======================
-       RESPUESTA
-    ====================== */
-
     return res.json({
       variantes,
       copy,
@@ -86,6 +85,9 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('generar-descripcion-pro error:', err);
-    res.status(500).json({ error: 'Error generando versión PRO' });
+    return res.status(500).json({
+      error: 'Error generando versión PRO',
+      reason: 'server_error'
+    });
   }
 }
