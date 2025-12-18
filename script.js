@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const proCredits = document.getElementById('pro-credits');
   const btnPayPro = document.getElementById('btn-pay-pro');
 
-  let forcedPlan = null; // 👈 C10.7
+  let forcedPlan = null;
 
   async function checkPro(email) {
     const res = await fetch('/api/check-pro', {
@@ -56,28 +56,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const check = await checkPro(email);
 
       /* ======================
-         ❌ BLOQUEOS PRO
+         ❌ BLOQUEOS
       ====================== */
 
       if (!check.pro) {
         proResult.style.display = 'block';
         proPay.style.display = 'block';
-
         proCredits.style.display = 'none';
 
         if (check.reason === 'no_credits') {
           proNotice.innerHTML =
             '⚠️ Te quedaste sin créditos.<br><small>Pasate al plan mensual y seguí generando sin límites.</small>';
           forcedPlan = 'mensual';
-        }
-
-        if (check.reason === 'expired') {
+        } else if (check.reason === 'expired') {
           proNotice.innerHTML =
             '⏳ Tu plan mensual venció.<br><small>Reactivá tu plan para seguir usando INMOAUTO.</small>';
           forcedPlan = 'mensual';
-        }
-
-        if (!check.reason) {
+        } else {
           proNotice.innerHTML =
             '🔒 Función disponible solo para usuarios PRO.';
           forcedPlan = 'pack_10';
@@ -96,8 +91,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const json = await generarVersionPro(data);
 
-      proNotice.innerHTML =
-        '✅ Versión PRO generada correctamente';
+      let notice = '✅ Versión PRO generada correctamente';
+
+      if (check.warnings?.lowCredits) {
+        notice += '<br><small>⚠️ Te quedan pocos créditos. Considerá pasarte al plan mensual.</small>';
+      }
+
+      if (check.warnings?.expiresSoon) {
+        notice += '<br><small>⏳ Tu plan mensual vence pronto.</small>';
+      }
+
+      proNotice.innerHTML = notice;
       proNotice.style.display = 'block';
 
       proCredits.textContent =
@@ -137,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ======================
-     🚀 ACTIVAR PRO (MP)
+     🚀 ACTIVAR PRO
   ====================== */
 
   btnPayPro?.addEventListener('click', async () => {
