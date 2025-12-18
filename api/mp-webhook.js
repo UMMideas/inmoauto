@@ -10,7 +10,7 @@ mercadopago.configure({
 const USERS_FILE = path.join(process.cwd(), 'pro-users.json');
 
 /* ======================
-   HELPERS STORE
+   STORE HELPERS
 ====================== */
 
 function readStore() {
@@ -25,13 +25,22 @@ function writeStore(data) {
 }
 
 /* ======================
-   PLANES (FUENTE DE VERDAD)
+   PLANES (FUENTE ÚNICA)
 ====================== */
 
 const PLANS = {
-  pack_5: { credits: 5, expiresInDays: null },
-  pack_10: { credits: 10, expiresInDays: null },
-  mensual: { credits: 30, expiresInDays: 30 }
+  pack_5: {
+    credits: 5,
+    expiresInDays: null
+  },
+  pack_10: {
+    credits: 10,
+    expiresInDays: null
+  },
+  mensual: {
+    credits: 30,
+    expiresInDays: 30
+  }
 };
 
 /* ======================
@@ -58,27 +67,36 @@ function verifySignature(req) {
 }
 
 /* ======================
-   HANDLER
+   HANDLER WEBHOOK MP
 ====================== */
 
 export default async function handler(req, res) {
   try {
+    // 🔒 Seguridad
     if (!verifySignature(req)) {
-      console.warn('❌ Firma MP inválida');
+      console.warn('❌ Webhook MP con firma inválida');
       return res.status(401).end();
     }
 
     const { type, data } = req.body;
-    if (type !== 'payment') return res.status(200).end();
 
+    // MP envía muchos eventos
+    if (type !== 'payment') {
+      return res.status(200).end();
+    }
+
+    // 🔍 Obtener pago real
     const payment = await mercadopago.payment.findById(data.id);
     const info = payment.body;
 
-    if (info.status !== 'approved') return res.status(200).end();
+    // ✅ Solo pagos aprobados
+    if (info.status !== 'approved') {
+      return res.status(200).end();
+    }
 
     const email = info.payer?.email;
     const planId = info.metadata?.plan_id;
-    const paymentId = info.id?.toString();
+    const paymentId = String(info.id);
 
     if (!email || !planId || !PLANS[planId]) {
       console.warn('⚠️ Pago aprobado sin metadata válida');
@@ -86,6 +104,10 @@ export default async function handler(req, res) {
     }
 
     const store = readStore();
+
+    /* ======================
+       CREAR USUARIO SI NO EXISTE
+    ====================== */
 
     if (!store.users[email]) {
       store.users[email] = {
@@ -96,26 +118,51 @@ export default async function handler(req, res) {
       };
     }
 
-    // 🔒 Anti-duplicados
-    if (store.users[email].payments.includes(paymentId)) {
+    const user = store.users[email];
+
+    /* ======================
+       ANTI DUPLICADOS REAL
+    ====================== */
+
+    if (user.payments.includes(paymentId)) {
       return res.status(200).end();
     }
 
     const plan = PLANS[planId];
 
-    store.users[email].credits += plan.credits;
+    /* ======================
+       CARGA DE CRÉDITOS
+    ====================== */
+
+    user.credits += plan.credits;
+    user.plan = planId;
+
+    /* ======================
+       PLAN MENSUAL (RENOVABLE)
+    ====================== */
 
     if (plan.expiresInDays) {
-      const expires = new Date();
-      expires.setDate(expires.getDate() + plan.expiresInDays);
-      store.users[email].expiresAt = expires.toISOString();
+      const now = new Date();
+
+      // Si ya tenía plan activo, renovamos desde hoy
+      const baseDate =
+        user.expiresAt && new Date(user.expiresAt) > now
+          ? new Date(user.expiresAt)
+          : now;
+
+      baseDate.setDate(baseDate.getDate() + plan.expiresInDays);
+      user.expiresAt = baseDate.toISOString();
     }
 
-    store.users[email].payments.push(paymentId);
+    /* ======================
+       REGISTRAR PAGO
+    ====================== */
+
+    user.payments.push(paymentId);
 
     writeStore(store);
 
-    console.log(`✅ Créditos cargados: ${email} → ${planId}`);
+    console.log(`✅ PRO activado: ${email} → ${planId}`);
 
     return res.status(200).end();
 
